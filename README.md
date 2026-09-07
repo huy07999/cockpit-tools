@@ -1,5 +1,22 @@
 # Cockpit Tools
 
+## Termux WebUI
+
+The Android ARM64 artifact contains the `cockpit` CLI and a self-hosted React dashboard. Extract both files and start the local server:
+
+```bash
+tar -xzf cockpit-termux-aarch64.tar.gz
+./cockpit serve
+```
+
+Open `http://127.0.0.1:8787` in the Android browser. To access it from another device on the same network, bind to all interfaces and require an API token:
+
+```bash
+./cockpit serve --host 0.0.0.0 --token 'replace-with-a-long-random-token'
+```
+
+The WebUI currently lists Cursor and GitHub Copilot accounts and can switch Cursor accounts. GitHub Copilot switching remains view-only until the CLI backend supports its full desktop synchronization flow. Account access tokens are never returned by the Web API.
+
 [English](README.en.md) · [Portuguese (BR)](README.pt-br.md) · 简体中文
 
 [![GitHub stars](https://img.shields.io/github/stars/jlcodes99/cockpit-tools?style=flat&color=gold)](https://github.com/jlcodes99/cockpit-tools)

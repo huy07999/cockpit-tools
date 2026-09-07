@@ -1,6 +1,10 @@
+mod web_server;
+
 use clap::{Parser, Subcommand};
 use cockpit_core::modules::{cursor_account, github_copilot_account};
 use colored::*;
+use std::net::IpAddr;
+use std::path::PathBuf;
 use tabled::{Table, Tabled};
 
 #[derive(Parser)]
@@ -28,6 +32,21 @@ enum Commands {
     Quota {
         /// The platform (cursor, copilot)
         platform: String,
+    },
+    /// Start the self-hosted Cockpit WebUI
+    Serve {
+        /// Address to bind. Non-loopback addresses require --token
+        #[arg(long, default_value = "127.0.0.1")]
+        host: IpAddr,
+        /// HTTP port
+        #[arg(long, default_value_t = 8787)]
+        port: u16,
+        /// Directory containing the built WebUI index.html
+        #[arg(long, env = "COCKPIT_WEB_ROOT")]
+        web_root: Option<PathBuf>,
+        /// Bearer token required by API requests
+        #[arg(long, env = "COCKPIT_WEB_TOKEN", hide_env_values = true)]
+        token: Option<String>,
     },
 }
 
@@ -103,6 +122,12 @@ async fn main() -> anyhow::Result<()> {
                 platform
             ),
         },
+        Some(Commands::Serve {
+            host,
+            port,
+            web_root,
+            token,
+        }) => web_server::serve(host, port, web_root, token).await?,
         None => {
             println!("Welcome to Cockpit CLI! Use --help for commands.");
         }

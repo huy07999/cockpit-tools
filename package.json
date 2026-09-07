@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite --config vite.web.config.ts",
     "test:codex-api-key-scope": "node --test src/utils/codexApiKeyAccountScope.test.ts",
     "typecheck": "tsc --noEmit",
     "prebuild": "npm run typecheck",
     "build": "npm run sync-version && tsc && vite build",
+    "build:web": "tsc -p tsconfig.web.json --noEmit && vite build --config vite.web.config.ts",
     "release:preflight": "node scripts/release/preflight.cjs",
     "preview": "vite preview",
     "pretauri:dev": "npm run typecheck",

@@ -23,6 +23,17 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build WebUI
+        run: |
+          npm ci
+          npm run build:web
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -74,9 +85,14 @@ jobs:
         run: |
           mkdir -p artifact
           cp target/aarch64-linux-android/release/cockpit-cli artifact/cockpit
+          cp -R dist-web artifact/webui
           chmod +x artifact/cockpit
 
-          tar -C artifact -czf cockpit-termux-aarch64.tar.gz cockpit
+          test -f artifact/webui/index.html
+          tar -C artifact -czf cockpit-termux-aarch64.tar.gz cockpit webui
+
+          tar -tzf cockpit-termux-aarch64.tar.gz | grep -Fx 'cockpit'
+          tar -tzf cockpit-termux-aarch64.tar.gz | grep -Fx 'webui/index.html'
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
