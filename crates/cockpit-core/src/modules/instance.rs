@@ -415,7 +415,15 @@ pub fn delete_instance_directory(dir_path: &Path) -> Result<(), String> {
         return Ok(());
     }
 
-    trash::delete(dir_path).map_err(|err| format!("移动实例目录到回收站失败: {}", err))
+    #[cfg(not(target_os = "android"))]
+    {
+        trash::delete(dir_path).map_err(|err| format!("移动实例目录到回收站失败: {}", err))
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        std::fs::remove_dir_all(dir_path).map_err(|err| format!("删除实例目录失败: {}", err))
+    }
 }
 
 pub fn update_instance_after_start(instance_id: &str, pid: u32) -> Result<InstanceProfile, String> {

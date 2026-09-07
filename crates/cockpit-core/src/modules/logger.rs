@@ -1,4 +1,3 @@
-use crate::modules::account::get_data_dir;
 use chrono::{DateTime, Duration, Local};
 use regex::{Captures, Regex};
 use std::fs;
@@ -30,7 +29,7 @@ impl tracing_subscriber::fmt::time::FormatTime for LocalTimer {
 }
 
 pub fn get_log_dir() -> Result<PathBuf, String> {
-    let data_dir = get_data_dir()?;
+    let data_dir = crate::modules::config::get_data_dir()?;
     let log_dir = data_dir.join("logs");
 
     if !log_dir.exists() {

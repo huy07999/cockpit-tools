@@ -8,7 +8,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 use crate::models::cursor::{CursorAccount, CursorAccountIndex, CursorImportPayload};
-use crate::modules::{account, logger};
+#[cfg(feature = "desktop")]
+use crate::modules::account;
+#[cfg(all(feature = "cli", not(feature = "desktop")))]
+use crate::modules::cli_account as account;
+use crate::modules::logger;
 
 const ACCOUNTS_INDEX_FILE: &str = "cursor_accounts.json";
 const ACCOUNTS_DIR: &str = "cursor_accounts";
@@ -1907,11 +1911,14 @@ pub(crate) fn resolve_current_account_id(accounts: &[CursorAccount]) -> Option<S
         }
     }
 
-    if let Ok(settings) = crate::modules::cursor_instance::load_default_settings() {
-        if let Some(bind_id) = settings.bind_account_id {
-            let trimmed = bind_id.trim();
-            if !trimmed.is_empty() {
-                return Some(trimmed.to_string());
+    #[cfg(feature = "desktop")]
+    {
+        if let Ok(settings) = crate::modules::cursor_instance::load_default_settings() {
+            if let Some(bind_id) = settings.bind_account_id {
+                let trimmed = bind_id.trim();
+                if !trimmed.is_empty() {
+                    return Some(trimmed.to_string());
+                }
             }
         }
     }
@@ -1984,8 +1991,7 @@ fn clear_quota_alert_cooldown(account_id: &str, threshold: i32) {
     }
 }
 
-pub fn run_quota_alert_if_needed(
-) -> Result<Option<crate::modules::account::QuotaAlertPayload>, String> {
+pub fn run_quota_alert_if_needed() -> Result<Option<account::QuotaAlertPayload>, String> {
     let cfg = crate::modules::config::get_user_config();
     if !cfg.cursor_quota_alert_enabled {
         return Ok(None);
@@ -2029,7 +2035,7 @@ pub fn run_quota_alert_if_needed(
 
     let recommendation = pick_quota_alert_recommendation(&accounts, &current_id);
     let lowest_percentage = low_models.iter().map(|(_, pct)| *pct).min().unwrap_or(0);
-    let payload = crate::modules::account::QuotaAlertPayload {
+    let payload = account::QuotaAlertPayload {
         platform: "cursor".to_string(),
         current_account_id: current_id,
         current_email: display_email(current),
@@ -2042,6 +2048,6 @@ pub fn run_quota_alert_if_needed(
         triggered_at: now,
     };
 
-    crate::modules::account::dispatch_quota_alert(&payload);
+    account::dispatch_quota_alert(&payload);
     Ok(Some(payload))
 }
