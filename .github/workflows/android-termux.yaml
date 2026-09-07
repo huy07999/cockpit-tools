@@ -1,0 +1,86 @@
+name: Build Cockpit CLI - Termux Android ARM64
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    env:
+      CARGO_TERM_COLOR: always
+      ANDROID_NDK_VERSION: "27.2.12479018"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager --install "ndk;${ANDROID_NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            lld \
+            pkg-config \
+            libssl-dev \
+            build-essential
+
+      - name: Configure Android linker
+        run: |
+          NDK="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+
+          echo "CC_aarch64_linux_android=$NDK/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+          echo "CXX_aarch64_linux_android=$NDK/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$NDK/llvm-ar" >> "$GITHUB_ENV"
+
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$NDK/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+
+      - name: Show toolchain
+        run: |
+          rustc --version
+          cargo --version
+          "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" --version
+
+      - name: Build cockpit-cli
+        run: |
+          cargo build \
+            --release \
+            --package cockpit-cli \
+            --target aarch64-linux-android
+
+      - name: Verify binary
+        run: |
+          file target/aarch64-linux-android/release/cockpit-cli
+          readelf -h target/aarch64-linux-android/release/cockpit-cli | grep -E 'Class|Machine'
+          readelf -l target/aarch64-linux-android/release/cockpit-cli | grep -i interpreter || true
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p artifact
+          cp target/aarch64-linux-android/release/cockpit-cli artifact/cockpit
+          chmod +x artifact/cockpit
+
+          tar -C artifact -czf cockpit-termux-aarch64.tar.gz cockpit
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: cockpit-termux-aarch64
+          path: cockpit-termux-aarch64.tar.gz
+          if-no-files-found: error
