@@ -39,7 +39,9 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "time"] }
 tracing-appender = "0.2"
 tracing-log = "0.2"
-trash = "5"
+#trash = "5"
+[target.'cfg(not(target_os = "android"))'.dependencies]
+trash = "5.2.7"
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 mac-notification-sys = "0.6"
 tauri-plugin-notification = "2"
