@@ -15,7 +15,7 @@ Open `http://127.0.0.1:8787` in the Android browser. To access it from another d
 ./cockpit serve --host 0.0.0.0 --token 'replace-with-a-long-random-token'
 ```
 
-The WebUI currently lists Cursor and GitHub Copilot accounts and can switch Cursor accounts. GitHub Copilot switching remains view-only until the CLI backend supports its full desktop synchronization flow. Account access tokens are never returned by the Web API.
+The WebUI follows the desktop Cockpit layout and exposes all 18 account providers: Antigravity, Codex, Claude, Zed, GitHub Copilot, Windsurf, Kiro, Cursor, Grok, CodeBuddy, CodeBuddy CN, Qoder, ZCode, four TRAE variants, and WorkBuddy. It supports safe metadata browsing, search, tag editing, and soft deletion to `web-trash`. Cursor switching is available when its local installation is compatible; switching other desktop applications remains disabled on Android because their native desktop clients are unavailable. Account access and refresh tokens are never returned by the Web API.
 
 [English](README.en.md) · [Portuguese (BR)](README.pt-br.md) · 简体中文
 
